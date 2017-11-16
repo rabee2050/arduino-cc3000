@@ -1,6 +1,6 @@
 /*
   Done by TATCO Inc.
-  
+
   Contacts:
   info@tatco.cc
 
@@ -30,8 +30,8 @@
 Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS, ADAFRUIT_CC3000_IRQ, ADAFRUIT_CC3000_VBAT,
                          SPI_CLOCK_DIVIDER);
 
-#define WLAN_SSID       "Mi rabee"   // cannot be longer than 32 characters!
-#define WLAN_PASS       "1231231234"
+#define WLAN_SSID       "Mi rabee"   //  WIFI SSID
+#define WLAN_PASS       "1231231234" //  WIFI Password
 #define WLAN_SECURITY   WLAN_SEC_WPA2
 #define LISTEN_PORT           80
 Adafruit_CC3000_Server httpServer(LISTEN_PORT);
@@ -40,18 +40,17 @@ Adafruit_CC3000_Server httpServer(LISTEN_PORT);
 #define lcd_size 3 //this will define number of LCD on the phone app
 int refresh_time = 15; //the data will be updated on the app every 15 seconds.
 
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)//Mega
 Servo myServo[54];
 char mode_action[54];
 int mode_val[54];
 #endif
-#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega16U4__)
+#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega16U4__)//Leonardo or UNO
 Servo myServo[14];
 char mode_action[14];
 int mode_val[14];
 #endif
 
-String mode_feedback;
 String lcd[lcd_size];
 
 unsigned long last_ip = millis();
@@ -60,6 +59,9 @@ String httpOk;
 void setup(void)
 {
   Serial.begin(9600);
+  while (!Serial) {
+    ;
+  }
   boardInit();
 
   if (!cc3000.begin())
@@ -68,13 +70,13 @@ void setup(void)
     while (1);
   }
 
-  Serial.print(F("connecting to ")); Serial.println(WLAN_SSID);
+  Serial.print(F("connecting to: ")); Serial.println(WLAN_SSID);
   if (!cc3000.connectToAP(WLAN_SSID, WLAN_PASS, WLAN_SECURITY)) {
     Serial.println(F("Failed!"));
     while (1);
   }
 
-  Serial.println(F("Request DHCP"));
+  Serial.println(F("Request DHCP..."));
   while (!cc3000.checkDHCP())
   {
     delay(100);
@@ -96,21 +98,20 @@ void loop(void)
   // Try to get a client which is connected.
   Adafruit_CC3000_ClientRef client = httpServer.available();
   if (client.available()) {
+    update_input();
     process(client);
-  }
 
+  }
   delay(100);
   client.close();
-  update_input();
-  print_wifiStatus();
 
 }
 
 void process(Adafruit_CC3000_ClientRef client) {
 
+  String getString = client.readStringUntil('/');
+  String arduinoString = client.readStringUntil('/');
   String command = client.readStringUntil('/');
-  command = client.readStringUntil('/');
-  command = client.readStringUntil('/');
 
   if (command == F("terminal")) {
     terminalCommand(client);
@@ -148,7 +149,7 @@ void process(Adafruit_CC3000_ClientRef client) {
 }
 
 void terminalCommand(Adafruit_CC3000_ClientRef client) {//Here you recieve data form app terminal
-  String data = client.readStringUntil('\r');
+  String data = client.readStringUntil('/');
   Serial.println(data);
   client.print(httpOk);
 
@@ -196,6 +197,7 @@ void modeCommand(Adafruit_CC3000_ClientRef client) {
   String mode = client.readStringUntil(' ');
   client.print(httpOk);
   client.fastrprintln(F(""));
+  myServo[pin].detach();
   if (mode == F("/input")) {
     pinMode(pin, INPUT);
     mode_action[pin] = 'i';
@@ -204,7 +206,6 @@ void modeCommand(Adafruit_CC3000_ClientRef client) {
     client.print(pin);
     client.print(F(" set as INPUT!"));
     digitalWrite(pin, LOW);
-    //return;
   }
 
   if (mode == F("/output")) {
@@ -215,8 +216,6 @@ void modeCommand(Adafruit_CC3000_ClientRef client) {
     client.print(pin);
     client.print(F(" set as OUTPUT!"));
     digitalWrite(pin, LOW);
-
-    //return;
   }
 
   if (mode == F("/pwm")) {
@@ -227,7 +226,6 @@ void modeCommand(Adafruit_CC3000_ClientRef client) {
     client.print(pin);
     client.print(F(" set as PWM!"));
     digitalWrite(pin, LOW);
-    //return;
   }
 
   if (mode == F("/servo")) {
@@ -236,7 +234,6 @@ void modeCommand(Adafruit_CC3000_ClientRef client) {
     client.print(F("D"));
     client.print(pin);
     client.print(F(" set as SERVO!"));
-    //    return;
   }
 
 }
@@ -248,10 +245,10 @@ void allonoff(Adafruit_CC3000_ClientRef client) {
   for (byte i = 0; i <= 13; i++) {
     if (mode_action[i] == 'o') {
       digitalWrite(i, value);
-      client.print(httpOk);
-      client.print(value);
     }
   }
+  client.print(httpOk);
+  client.print(value);
 #endif
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
   for (byte i = 0; i <= 53; i++) {
@@ -259,6 +256,8 @@ void allonoff(Adafruit_CC3000_ClientRef client) {
       digitalWrite(i, value);
     }
   }
+  client.print(httpOk);
+  client.print(value);
 #endif
 
 }
@@ -273,81 +272,76 @@ void refresh(Adafruit_CC3000_ClientRef client) {
 }
 
 void allstatus(Adafruit_CC3000_ClientRef client) {
-
-
-
   client.fastrprintln(F("HTTP/1.1 200 OK"));
   client.fastrprintln("content-type:application/json");
   client.fastrprintln(F("Connection: close"));
-  //  client.fastrprintln(F("Server: Adafruit CC3000"));
+  client.fastrprintln(F("Server: Adafruit CC3000"));
   client.fastrprintln(F(""));
-  client.fastrprintln(F("{"));
-  client.fastrprint(F("\"m\":["));//m for Pin Mode
+  client.print(F("{"));
+  client.print(F("\"m\":["));//m for Pin Mode
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
   for (byte i = 0; i <= 53; i++) {
-    client.fastrprint(F("\""));
-    client.fastrprint(mode_action[i]);
-    client.fastrprint(F("\""));
-    if (i != 53)client.fastrprint(F(","));
+    client.print(F("\""));
+    client.print(mode_action[i]);
+    client.print(F("\""));
+    if (i != 53)client.print(F(","));
   }
 #endif
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega16U4__)
   for (byte i = 0; i <= 13; i++) {
-    client.fastrprint(F("\""));
+    client.print(F("\""));
     client.print(mode_action[i]);
-    client.fastrprint(F("\""));
-    if (i != 13)client.fastrprint(F(","));
+    client.print(F("\""));
+    if (i != 13)client.print(F(","));
   }
 #endif
-  client.fastrprintln(F("],"));
+  client.print(F("],"));
 
-  client.fastrprint(F("\"v\":["));// v for Mode value
+  client.print(F("\"v\":["));// v for Mode value
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
   for (byte i = 0; i <= 53; i++) {
-    client.fastrprint(mode_val[i]);
-    if (i != 53)client.fastrprint(F(","));
+    client.print(mode_val[i]);
+    if (i != 53)client.print(F(","));
   }
 #endif
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega16U4__)
   for (byte i = 0; i <= 13; i++) {
     client.print(mode_val[i]);
-    if (i != 13)client.fastrprint(F(","));
+    if (i != 13)client.print(F(","));
   }
 #endif
-  client.fastrprintln(F("],"));
+  client.print(F("],"));
 
-  client.fastrprint(F("\"a\":["));// a For Analog
+  client.print(F("\"a\":["));// a For Analog
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
   for (byte i = 0; i <= 15; i++) {
-    client.fastrprint(analogRead(i));
-    if (i != 15)client.fastrprint(F(","));
+    client.print(analogRead(i));
+    if (i != 15)client.print(F(","));
 
   }
 #endif
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega16U4__)
   for (byte i = 0; i <= 5; i++) {
     client.print(analogRead(i));
-    if (i != 5)client.fastrprint(F(","));
+    if (i != 5)client.print(F(","));
   }
 #endif
-  client.fastrprintln("],");
+  client.print("],");
 
-  client.fastrprint(F("\"l\":["));// // l for LCD
+  client.print(F("\"l\":["));// // l for LCD
   for (byte i = 0; i <= lcd_size - 1; i++) {
-    client.fastrprint(F("\""));
+    client.print(F("\""));
     client.print(lcd[i]);
-    client.fastrprint(F("\""));
-    if (i != lcd_size - 1)client.fastrprint(F(","));
+    client.print(F("\""));
+    if (i != lcd_size - 1)client.print(F(","));
   }
-  client.fastrprintln(F("],"));
-
-  //    client.fastrprint(F("\"f\":\""));// f for Feedback.
-  //    client.print(mode_feedback);
-  //    client.fastrprintln(F("\","));
-  client.fastrprint(F("\"t\":\""));//t for refresh Time .
+  client.print(F("],"));
+  client.print(F("\"t\":\""));//t for refresh Time .
   client.print(refresh_time);
-  client.fastrprintln(F("\""));
-  client.fastrprintln(F("}"));
+  client.print(F("\""));
+  client.print(F("}"));
+
+
 }
 
 
@@ -363,28 +357,15 @@ bool displayConnectionDetails(void)
   else
   {
     Serial.print(F("IP Addr: ")); cc3000.printIPdotsRev(ipAddress);
-    //    Serial.print(F("\nNetmask: ")); cc3000.printIPdotsRev(netmask);
-    //    Serial.print(F("\nGateway: ")); cc3000.printIPdotsRev(gateway);
-    //    Serial.print(F("\nDHCPsrv: ")); cc3000.printIPdotsRev(dhcpserv);
-    //    Serial.print(F("\nDNSserv: ")); cc3000.printIPdotsRev(dnsserv);
     Serial.println();
     return true;
   }
 }
 
-void print_wifiStatus() {
-  if (Serial) {
-    if (millis() - last_ip > 2000) {
-      displayConnectionDetails();
-    }
-    last_ip = millis();
-  }
-}
-
 void boardInit() {
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-  for (byte i = 0; i <= 13; i++) {
-    if (i == 0 || i == 1 || i == 3 || i == 5 || i == 10 || i == 11 || i == 12 || i == 13 || i == 50 || i == 51 || i == 52 || i == 53) {
+  for (byte i = 0; i <= 53; i++) {
+    if (i == 0 || i == 1 || i == 3 || i == 5  || i == 10  || i == 50 || i == 51 || i == 52 || i == 53) {
       mode_action[i] = 'x';
       mode_val[i] = 0;
     }
@@ -394,8 +375,8 @@ void boardInit() {
     }
   }
 
-  for (byte i = 0; i <= 13; i++) {
-    if (i == 0 || i == 1 || i == 3 || i == 5 || i == 10 || i == 11 || i == 12 || i == 13 || i == 50 || i == 51 || i == 52 || i == 53 ) {} else {
+  for (byte i = 0; i <= 53; i++) {
+    if (i == 0 || i == 1 || i == 3 || i == 5  || i == 10  || i == 50 || i == 51 || i == 52 || i == 53 ) {} else {
       pinMode(i, OUTPUT);
     }
   }
