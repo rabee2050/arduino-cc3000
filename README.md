@@ -5,7 +5,7 @@ This sketch work with the app on both iOS and Android : "Arduino CC3000 Kit"
 - Android: https://play.google.com/store/apps/details?id=com.arduino.cc3000kit&hl=en 
 
 Features:
-- Best in class Arduino 101 controller.
+- Best in class Arduino CC3000 controller.
 - Read & write digital pins. 
 - Read & write PWM pins.
 - Control SERVO motors.
