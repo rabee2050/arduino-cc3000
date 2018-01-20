@@ -2,7 +2,9 @@
 This sketch work with the app on both iOS and Android : "Arduino CC3000 Kit"
 
 - iOS: https://itunes.apple.com/us/app/arduino-cc3000-kit/id1086950547?mt=8
+- iOS(Without Ads): https://itunes.apple.com/us/app/cc3000-pro/id1335107335?ls=1&mt=8
 - Android: https://play.google.com/store/apps/details?id=com.arduino.cc3000kit&hl=en 
+- Android(Without Ads):https://play.google.com/store/apps/details?id=com.arduino.cc3000kitpro
 
 Features:
 - Best in class Arduino CC3000 controller.
