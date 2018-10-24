@@ -20,20 +20,20 @@
 #include <Adafruit_CC3000.h>
 #include <SPI.h>
 #include <Servo.h>
-#include "utility/debug.h"
-#include "utility/socket.h"
+//#include "utility/debug.h"
+//#include "utility/socket.h"
 
-#define WLAN_SSID       "Mi rabee"   //  WIFI SSID
-#define WLAN_PASS       "1231231234" //  WIFI Password
+#define WLAN_SSID       "Mi rabee"   //  Must be changed to your WiFi SSID
+#define WLAN_PASS       "1231231234" //  Must be changed to your WiFi Password
 #define WLAN_SECURITY   WLAN_SEC_WPA2
 #define LISTEN_PORT           80
 
-#define ADAFRUIT_CC3000_IRQ   3 
+#define ADAFRUIT_CC3000_IRQ   3
 #define ADAFRUIT_CC3000_VBAT  5
 #define ADAFRUIT_CC3000_CS    10
 Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS, ADAFRUIT_CC3000_IRQ, ADAFRUIT_CC3000_VBAT,
                          SPI_CLOCK_DIVIDER);// On an UNO, SCK = 13, MISO = 12, and MOSI = 11
-                         
+
 Adafruit_CC3000_Server httpServer(LISTEN_PORT);
 
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)//Mega
@@ -52,7 +52,7 @@ String lcd[lcdSize];
 
 byte digitalArraySize, analogArraySize;
 unsigned long serialTimer = millis();
-char* protectionPassword = "";
+char protectionPassword[20]="";//cannot be longer than 20 characters!
 char* boardType;
 String httpOk;
 
@@ -144,15 +144,12 @@ void process(Adafruit_CC3000_ClientRef client) {
 void terminalCommand(Adafruit_CC3000_ClientRef client) {//Here you recieve data form app terminal
   String data = client.readStringUntil('/');
   Serial.println(data);
-//  client.print(httpOk+"Ok from Arduino");
-
+  client.print(httpOk + "Ok from Arduino");
 }
 
 void changePassword(Adafruit_CC3000_ClientRef client) {
   String data = client.readStringUntil('/');
-//  protectionPassword = char* data;
   data.toCharArray(protectionPassword, sizeof(data));
-  Serial.println(data);
   client.print(httpOk);
 }
 
@@ -253,14 +250,10 @@ void allonoff(Adafruit_CC3000_ClientRef client) {
       digitalWrite(i, value);
     }
   }
-
-
 }
 
 
 void allstatus(Adafruit_CC3000_ClientRef client) {
-
-
   client.fastrprintln(F("HTTP/1.1 200 OK"));
   client.fastrprintln(F("content-type:application/json"));
   client.fastrprintln(F("Connection: close"));
@@ -330,11 +323,11 @@ void boardInit() {
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
   for (byte i = 0; i <= 53; i++) {
     if (i == 0 || i == 1 || i == 3 || i == 5  || i == 10  || i == 50 || i == 51 || i == 52 || i == 53) {
-      pinsMode[i] = F('x');
+      pinsMode[i] = 'x';
       pinsValue[i] = 0;
     }
     else {
-      pinsMode[i] = F('o');
+      pinsMode[i] = 'o';
       pinsValue[i] = 0;
       pinMode(i, OUTPUT);
     }
