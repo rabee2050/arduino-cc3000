@@ -1,8 +1,22 @@
 /*
-  Done by TATCO Inc.
+  Title  : CC3000 Kit
+  version: V4.
+  Contact: info@tatco.cc
+  Done By: TATCO Inc.
+  github : https://github.com/rabee2050/arduino-cc3000
+  Youtube: http://tatco.cc
 
-  Contacts:
-  info@tatco.cc
+  App - Pro Version:
+  iOS    : https://itunes.apple.com/us/app/cc3000-pro/id1335107335?ls=1&mt=8
+  Android: https://play.google.com/store/apps/details?id=com.arduino.cc3000kitpro
+
+  App - Free Version:
+  iOS    : https://itunes.apple.com/us/app/arduino-cc3000-kit/id1086950547?mt=8
+  Android: https://play.google.com/store/apps/details?id=com.arduino.cc3000kit&hl=en
+
+  Important Note: Any additional user built in functions will make UNO or Leonardo unstable 
+  due of memory shortage. Recommend to use Arduino MEGA in that case.
+  
 
   Release Notes:
   - V1 Created 23 Feb 2016
@@ -23,8 +37,8 @@
 //#include "utility/debug.h"
 //#include "utility/socket.h"
 
-#define WLAN_SSID       "Mi rabee"   //  Must be changed to your WiFi SSID
-#define WLAN_PASS       "1231231234" //  Must be changed to your WiFi Password
+#define WLAN_SSID       "HW-4G-MobileWiFi-0AC8"   //  Must be changed to your WiFi SSID
+#define WLAN_PASS       "Q96EAEQN" //  Must be changed to your WiFi Password
 #define WLAN_SECURITY   WLAN_SEC_WPA2
 #define LISTEN_PORT           80
 
@@ -52,9 +66,10 @@ String lcd[lcdSize];
 
 byte digitalArraySize, analogArraySize;
 unsigned long serialTimer = millis();
-char protectionPassword[20]="";//cannot be longer than 20 characters!
+char protectionPassword[20]="";//Can't be longer than 20 characters!
 char* boardType;
 String httpOk;
+float appBuildVersion = 4.0;
 
 void setup(void)
 {
@@ -295,6 +310,9 @@ void allstatus(Adafruit_CC3000_ClientRef client) {
   client.fastrprint(F("\"p\":\""));//p for protection password .
   client.fastrprint(protectionPassword);//
   client.fastrprint(F("\","));
+  client.fastrprint(F( "\"b\":\"")); //b for app build version .
+  client.print( appBuildVersion);
+  client.fastrprint(F( "\","));
   client.fastrprint(F("\"t\":\""));//t for board type .
   client.fastrprint(boardType);
   client.fastrprint(F("\""));
