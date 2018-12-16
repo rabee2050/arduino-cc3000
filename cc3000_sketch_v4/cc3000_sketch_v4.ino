@@ -8,7 +8,7 @@
   - V1 Created 23 Feb 2016
   - V2 Updated 14 May 2016
   - V3 Updated 11 Nov 2017
-  - V4 Updated 22 Oct 2017
+  - V4 Updated 22 Oct 2018
 
 
   Tested on CC3000 WiFi Shield with:
