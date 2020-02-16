@@ -38,8 +38,8 @@
 //#include "utility/debug.h"
 //#include "utility/socket.h"
 
-#define WLAN_SSID       "HW-4G-MobileWiFi-0AC8"   //  Must be changed to your WiFi SSID
-#define WLAN_PASS       "Q96EAEQN" //  Must be changed to your WiFi Password
+#define WLAN_SSID       "iPhone"   //  Must be changed to your WiFi SSID
+#define WLAN_PASS       "1231231234" //  Must be changed to your WiFi Password
 #define WLAN_SECURITY   WLAN_SEC_WPA2
 #define LISTEN_PORT           80
 
@@ -81,7 +81,7 @@ void setup(void)
     while (1);
   }
 
-  Serial.print(F("connecting to: ")); Serial.println(WLAN_SSID);
+  Serial.print(F("connect to: ")); Serial.println(WLAN_SSID);
   if (!cc3000.connectToAP(WLAN_SSID, WLAN_PASS, WLAN_SECURITY)) {
     Serial.println(F("Failed!"));
     while (1);
@@ -101,7 +101,7 @@ void setup(void)
 
 void loop(void)
 {
-  lcd[0] = "Test 1 LCD";// Send any data to the LCD dashboard in the App.
+  lcd[0] = F("Test 1 LCD");// Send any data to the LCD dashboard in the App.
   lcd[1] = analogRead(A0);// Send analog value of A0 to the LCD dashboard in the App.
   lcd[2] = random(1, 100);// Send any data to the LCD dashboard in the App.
 
@@ -160,7 +160,7 @@ void process(Adafruit_CC3000_ClientRef client) {
 void terminalCommand(Adafruit_CC3000_ClientRef client) {//Here you recieve data form app terminal
   String data = client.readStringUntil('/');
   Serial.println(data);
-  client.print(httpOk + "Ok from Arduino");
+  client.print(httpOk + "Ok");
 }
 
 void changePassword(Adafruit_CC3000_ClientRef client) {
